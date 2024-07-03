@@ -32,6 +32,7 @@ import cn.nukkit.level.generator.Generator;
 import cn.nukkit.level.generator.task.*;
 import cn.nukkit.level.particle.DestroyBlockParticle;
 import cn.nukkit.level.particle.Particle;
+import cn.nukkit.level.sound.BlockPlaceSound;
 import cn.nukkit.level.sound.Sound;
 import cn.nukkit.math.*;
 import cn.nukkit.metadata.BlockMetadataStore;
@@ -1908,8 +1909,12 @@ public class Level implements ChunkManager, Metadatable {
             return null;
         }
 
-        if (player != null && !player.isCreative()) {
-            item.setCount(item.getCount() - 1);
+        if (player != null) {
+            this.addSound(new BlockPlaceSound(block.add(0.5, 0.5, 0.5)), this.getChunkPlayers((int) block.x >> 4, (int) block.z >> 4).values());
+
+            if (!player.isCreative()) {
+                item.setCount(item.getCount() - 1);
+            }
         }
 
         if (item.getCount() <= 0) {
