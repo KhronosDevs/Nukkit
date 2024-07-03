@@ -11,6 +11,7 @@ import cn.nukkit.event.entity.EntityDamageEvent;
 import cn.nukkit.event.entity.EntityExplodeEvent;
 import cn.nukkit.item.Item;
 import cn.nukkit.item.ItemBlock;
+import cn.nukkit.level.particle.HugeExplodeParticle;
 import cn.nukkit.math.AxisAlignedBB;
 import cn.nukkit.math.BlockVector3;
 import cn.nukkit.math.NukkitMath;
@@ -225,6 +226,7 @@ public class Explosion {
         pk.records = send.stream().toArray(Vector3[]::new);
 
         this.level.addChunkPacket((int) source.x >> 4, (int) source.z >> 4, pk);
+        this.level.addParticle(new HugeExplodeParticle(new Vector3(this.source.x, this.source.y, this.source.z)));
 
         return true;
     }
