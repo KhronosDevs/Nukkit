@@ -58,6 +58,7 @@ public class EntityXPOrb extends Entity {
     private int age = 0;
     private int pickupDelay = 0;
     private int exp = 0;
+    private Player closestPlayer;
 
     @Override
     protected void initEntity() {
@@ -113,6 +114,43 @@ public class EntityXPOrb extends Entity {
 
             if (this.checkObstruction(this.x, this.y, this.z)) {
                 hasUpdate = true;
+            }
+
+            if (this.closestPlayer == null || this.closestPlayer.distanceSquared(this) > 64.0D) {
+                double closestDistanceSquared = 64.0D;
+                Player closestPlayerTemp = null;
+
+                for (Player p : level.getPlayers().values()) {
+                    if (!p.isSpectator()) {
+                        double distanceSquared = p.distanceSquared(this);
+                        if (distanceSquared <= closestDistanceSquared) {
+                            closestDistanceSquared = distanceSquared;
+                            closestPlayerTemp = p;
+                        }
+                    }
+                }
+
+                this.closestPlayer = closestPlayerTemp;
+            }
+
+            if (this.closestPlayer != null && this.closestPlayer.isSpectator()) {
+                this.closestPlayer = null;
+            }
+
+            if (this.closestPlayer != null) {
+                double dX = this.closestPlayer.x - this.x;
+                double dY = (this.closestPlayer.y + (double) this.closestPlayer.getEyeHeight() / 2.0D) - this.y;
+                double dZ = this.closestPlayer.z - this.z;
+                double d = Math.sqrt(dX * dX + dY * dY + dZ * dZ);
+
+                if (d < 8.0D) {
+                    double diff = 1.0D - (d / 8.0D);
+                    diff *= diff;
+
+                    this.motionX += (dX / d) * diff * 0.1D;
+                    this.motionY += (dY / d) * diff * 0.1D;
+                    this.motionZ += (dZ / d) * diff * 0.1D;
+                }
             }
 
             this.move(this.motionX, this.motionY, this.motionZ);
