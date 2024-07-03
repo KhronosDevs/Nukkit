@@ -864,15 +864,15 @@ public class Server {
     public void sendFullPlayerListData(Player player) {
         PlayerListPacket pk = new PlayerListPacket();
         pk.type = PlayerListPacket.TYPE_ADD;
-        pk.entries = this.playerList
-                .values()
-                .stream()
-                .map(p -> new PlayerListPacket.Entry(
-                        p.getUniqueId(),
-                        p.getId(),
-                        p.getDisplayName(),
-                        p.getSkin()))
-                .toArray(PlayerListPacket.Entry[]::new);
+        List<PlayerListPacket.Entry> entries = new ArrayList<>();
+        for (Player p: this.playerList.values()) {
+            if (p.equals(player)) {
+                continue;
+            }
+
+            entries.add(new PlayerListPacket.Entry(p.getUniqueId(), p.getId(), p.getDisplayName(), p.getSkin()));
+        }
+        pk.entries = entries.toArray(new PlayerListPacket.Entry[0]);
 
         player.dataPacket(pk);
     }

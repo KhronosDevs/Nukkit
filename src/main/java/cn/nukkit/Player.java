@@ -97,6 +97,9 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
     public static final int CRAFTING_ANVIL = 2;
     public static final int CRAFTING_ENCHANT = 3;
 
+    public static final float DEFAULT_SPEED = 0.1f;
+    public static final float MAXIMUM_SPEED = 0.5f;
+
     protected final SourceInterface interfaz;
 
     public boolean playedBefore;
@@ -1682,6 +1685,8 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
         setTimePacket.started = !this.level.stopTime;
         this.dataPacket(setTimePacket);
 
+        this.setMovementSpeed(DEFAULT_SPEED);
+
         SetSpawnPositionPacket setSpawnPositionPacket = new SetSpawnPositionPacket();
         setSpawnPositionPacket.x = (int) spawnPosition.x;
         setSpawnPositionPacket.y = (int) spawnPosition.y;
@@ -1725,6 +1730,8 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
             containerSetContentPacket.slots = Item.getCreativeItems().stream().toArray(Item[]::new);
             this.dataPacket(containerSetContentPacket);
         }
+
+        this.server.sendFullPlayerListData(this);
 
         this.forceMovement = this.teleportPosition = this.getPosition();
 
@@ -2311,7 +2318,7 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
 
                             this.teleport(playerRespawnEvent.getRespawnPosition(), null);
 
-                            this.setSprinting(false);
+                            this.setSprinting(false, true);
                             this.setSneaking(false);
 
                             this.extinguish();
@@ -2325,7 +2332,7 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                             this.removeAllEffects();
                             this.sendData(this);
 
-                            this.setMovementSpeed(0.1f);
+                            this.setMovementSpeed(DEFAULT_SPEED);
 
                             this.getAdventureSettings().update();
                             this.inventory.sendContents(this);
@@ -4069,6 +4076,18 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
 
     public void setCheckMovement(boolean checkMovement) {
         this.checkMovement = checkMovement;
+    }
+
+    public void setSprinting(boolean value, boolean setDefault) {
+        super.setSprinting(value);
+        if (setDefault) {
+            this.movementSpeed = DEFAULT_SPEED;
+        } else {
+            float sprintSpeedChange = DEFAULT_SPEED * 0.3f;
+            if (!value) sprintSpeedChange *= -1;
+            this.movementSpeed += sprintSpeedChange;
+        }
+        this.setMovementSpeed(this.movementSpeed);
     }
 
     public synchronized void setLocale(Locale locale) {
