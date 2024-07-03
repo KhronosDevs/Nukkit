@@ -78,8 +78,10 @@ public abstract class Block extends Position implements Metadatable, Cloneable {
     public static final int IRON_BLOCK = 42;
     public static final int DOUBLE_SLAB = 43;
     public static final int DOUBLE_SLABS = 43;
+    public static final int DOUBLE_STONE_SLAB = 43;
     public static final int SLAB = 44;
     public static final int SLABS = 44;
+    public static final int STONE_SLAB = 44;
     public static final int BRICKS = 45;
     public static final int BRICKS_BLOCK = 45;
     public static final int TNT = 46;
@@ -123,7 +125,7 @@ public abstract class Block extends Position implements Metadatable, Cloneable {
     public static final int LIT_REDSTONE_ORE = 74;
 
     public static final int REDSTONE_TORCH = 76;
-
+    public static final int STONE_BUTTON = 77;
     public static final int SNOW = 78;
     public static final int SNOW_LAYER = 78;
     public static final int ICE = 79;
@@ -254,6 +256,10 @@ public abstract class Block extends Position implements Metadatable, Cloneable {
     public static final int DOUBLE_PLANT = 175;
 
     public static final int DAYLIGHT_DETECTOR_INVERTED = 178;
+    public static final int RED_SANDSTONE = 179;
+    public static final int RED_SANDSTONE_STAIRS = 180;
+    public static final int DOUBLE_RED_SANDSTONE_SLAB = 181;
+    public static final int RED_SANDSTONE_SLAB = 182;
 
     public static final int FENCE_GATE_SPRUCE = 183;
     public static final int FENCE_GATE_BIRCH = 184;
@@ -340,7 +346,7 @@ public abstract class Block extends Position implements Metadatable, Cloneable {
             list[RED_MUSHROOM] = BlockMushroomRed.class;
             list[GOLD_BLOCK] = BlockGold.class;
             list[IRON_BLOCK] = BlockIron.class;
-            list[DOUBLE_SLAB] = BlockDoubleSlab.class;
+            list[DOUBLE_SLAB] = BlockDoubleSlabStone.class;
             list[SLAB] = BlockSlab.class;
             list[BRICKS_BLOCK] = BlockBricks.class;
             list[TNT] = BlockTNT.class;

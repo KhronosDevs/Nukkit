@@ -284,6 +284,10 @@ public class Item implements Cloneable {
     public static final int DOUBLE_PLANT = 175;
 
     public static final int DAYLIGHT_DETECTOR_INVERTED = 178;
+    public static final int RED_SANDSTONE = 179;
+    public static final int RED_SANDSTONE_STAIRS = 180;
+    public static final int DOUBLE_RED_SANDSTONE_SLAB = 181;
+    public static final int RED_SANDSTONE_SLAB = 182;
 
     public static final int FENCE_GATE_SPRUCE = 183;
     public static final int FENCE_GATE_BIRCH = 184;
@@ -798,6 +802,9 @@ public class Item implements Cloneable {
         addCreativeItem(Item.get(Item.SANDSTONE, 0));
         addCreativeItem(Item.get(Item.SANDSTONE, 1));
         addCreativeItem(Item.get(Item.SANDSTONE, 2));
+        addCreativeItem(Item.get(Item.RED_SANDSTONE, 0));
+        addCreativeItem(Item.get(Item.RED_SANDSTONE, 1));
+        addCreativeItem(Item.get(Item.RED_SANDSTONE, 2));
         addCreativeItem(Item.get(Item.SAND, 0));
         addCreativeItem(Item.get(Item.SAND, 1));
         addCreativeItem(Item.get(Item.GRAVEL, 0));
@@ -820,6 +827,7 @@ public class Item implements Cloneable {
         addCreativeItem(Item.get(Item.DARK_OAK_WOODEN_STAIRS, 0));
         addCreativeItem(Item.get(Item.BRICK_STAIRS, 0));
         addCreativeItem(Item.get(Item.SANDSTONE_STAIRS, 0));
+        addCreativeItem(Item.get(Item.RED_SANDSTONE_STAIRS, 0));
         addCreativeItem(Item.get(Item.STONE_BRICK_STAIRS, 0));
         addCreativeItem(Item.get(Item.NETHER_BRICKS_STAIRS, 0));
         addCreativeItem(Item.get(Item.QUARTZ_STAIRS, 0));
@@ -833,6 +841,7 @@ public class Item implements Cloneable {
         addCreativeItem(Item.get(Item.WOODEN_SLAB, 5));
         addCreativeItem(Item.get(Item.SLAB, 4));
         addCreativeItem(Item.get(Item.SLAB, 1));
+        addCreativeItem(Item.get(Item.RED_SANDSTONE_SLAB));
         addCreativeItem(Item.get(Item.SLAB, 5));
         addCreativeItem(Item.get(Item.SLAB, 6));
         addCreativeItem(Item.get(Item.SLAB, 7));
