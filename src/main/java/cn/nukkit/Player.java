@@ -3199,12 +3199,12 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
             String message;
             if (isAdmin) {
                 if (!this.isBanned()) {
-                    message = "Kicked by admin." + (!"".equals(reason) ? " Reason: " + reason : "");
+                    message = "Kicked by admin." + (!"".equals(reasonString) ? " Reason: " + reasonString : "");
                 } else {
                     message = reasonString;
                 }
             } else {
-                if ("".equals(reason)) {
+                if ("".equals(reasonString)) {
                     message = "disconnectionScreen.noReason";
                 } else {
                     message = reasonString;
