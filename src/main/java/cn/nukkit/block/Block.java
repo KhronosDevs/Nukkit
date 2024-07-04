@@ -347,7 +347,7 @@ public abstract class Block extends Position implements Metadatable, Cloneable {
             list[GOLD_BLOCK] = BlockGold.class;
             list[IRON_BLOCK] = BlockIron.class;
             list[DOUBLE_SLAB] = BlockDoubleSlabStone.class;
-            list[SLAB] = BlockSlab.class;
+            list[SLAB] = BlockSlabStone.class;
             list[BRICKS_BLOCK] = BlockBricks.class;
             list[TNT] = BlockTNT.class;
             list[BOOKSHELF] = BlockBookshelf.class;
@@ -518,6 +518,9 @@ public abstract class Block extends Position implements Metadatable, Cloneable {
                         }
                     } catch (Exception e) {
                         Server.getInstance().getLogger().error("Error while registering " + c.getName(), e);
+                        for (int data = 0; data < 16; ++data) {
+                            fullList[(id << 4) | data] = new BlockUnknown(id, data);
+                        }
                         return;
                     }
 
@@ -542,7 +545,7 @@ public abstract class Block extends Position implements Metadatable, Cloneable {
                 } else {
                     lightFilter[id] = 1;
                     for (int data = 0; data < 16; ++data) {
-                        fullList[(id) << 4 | data] = new BlockUnknown(id, data);
+                        fullList[(id << 4) | data] = new BlockUnknown(id, data);
                     }
                 }
             }
