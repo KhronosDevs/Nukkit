@@ -34,7 +34,6 @@ import cn.nukkit.level.format.leveldb.LevelDB;
 import cn.nukkit.level.format.mcregion.McRegion;
 import cn.nukkit.level.generator.Flat;
 import cn.nukkit.level.generator.Generator;
-import cn.nukkit.level.generator.Nether;
 import cn.nukkit.level.generator.Normal;
 import cn.nukkit.level.generator.biome.Biome;
 import cn.nukkit.math.NukkitMath;
@@ -901,7 +900,7 @@ public class Server {
         final UUID uuid = player.getUniqueId();
 
         PlayerListPacket pk = new PlayerListPacket();
-        
+
         pk.type = PlayerListPacket.TYPE_ADD;
         pk.entries = this.playerList.values()
                 .stream()
@@ -937,7 +936,7 @@ public class Server {
 
     private void checkTickUpdates(int currentTick, long tickTime) {
         for (Player p : new ArrayList<>(this.players.values())) {
-            if (!p.loggedIn && (tickTime - p.creationTime) >= 10000 && p.kick(PlayerKickEvent.Reason.LOGIN_TIMOUT)) {
+            if (!p.loggedIn && (tickTime - p.creationTime) >= 10000 && p.kick(PlayerKickEvent.Reason.LOGIN_TIMEOUT, "Login timeout")) {
                 continue;
             }
             if (this.alwaysTickPlayers) {
