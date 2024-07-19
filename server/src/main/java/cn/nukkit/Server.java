@@ -1633,10 +1633,9 @@ public class Server {
         }
 
         Class<? extends LevelProvider> provider;
-        String providerName;
         if ((provider = LevelProviderManager.getProviderByName
-                (providerName = (String) this.getConfig("level-settings.default-format", "mcregion"))) == null) {
-            provider = LevelProviderManager.getProviderByName(providerName = "mcregion");
+                ((String) this.getConfig("level-settings.default-format", "mcregion"))) == null) {
+            provider = LevelProviderManager.getProviderByName("mcregion");
         }
 
         Level level;
