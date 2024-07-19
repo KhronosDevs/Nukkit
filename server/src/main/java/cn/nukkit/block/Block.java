@@ -960,13 +960,7 @@ public abstract class Block extends Position implements Metadatable, Cloneable {
     }
 
     public String getLocationHash() {
-        String str = "";
-        str = String.valueOf((int) this.x);
-        str += ":";
-        str += String.valueOf((int) this.y);
-        str += ":";
-        str += String.valueOf((int) this.z);
-        return str;
+        return this.getFloorX() + ":" + this.getFloorY() + ":" + this.getFloorZ();
     }
 
     public int getDropExp() {
