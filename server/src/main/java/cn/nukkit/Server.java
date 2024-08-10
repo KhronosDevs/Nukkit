@@ -100,10 +100,10 @@ public class Server {
 
     private boolean hasStopped = false;
 
+    @Getter
     private PluginManager pluginManager = null;
 
-    private int profilingTickrate = 20;
-
+    @Getter
     private ServerScheduler scheduler = null;
 
     private int tickCounter;
@@ -120,30 +120,37 @@ public class Server {
 
     private int sendUsageTicker = 0;
 
-    private boolean dispatchSignals = false;
-
+    @Getter
     private final MainLogger logger;
 
+    @Getter
     private final NukkitConsole console;
 
+    @Getter
     private SimpleCommandMap commandMap;
 
+    @Getter
     private CraftingManager craftingManager;
 
     private ConsoleCommandSender consoleSender;
 
+    @Getter
     private int maxPlayers;
 
     private boolean autoSave;
 
     private RCON rcon;
 
+    @Getter
     private EntityMetadataStore entityMetadata;
 
+    @Getter
     private PlayerMetadataStore playerMetadata;
 
+    @Getter
     private LevelMetadataStore levelMetadata;
 
+    @Getter
     private Network network;
 
     private boolean networkCompressionAsync = true;
@@ -164,8 +171,11 @@ public class Server {
 
     private UUID serverID;
 
+    @Getter
     private final String filePath;
+    @Getter
     private final String dataPath;
+    @Getter
     private final String pluginPath;
 
     private final Set<UUID> uniquePlayers = new HashSet<>();
@@ -174,7 +184,10 @@ public class Server {
 
     private QueryRegenerateEvent queryRegenerateEvent;
 
+    @Getter
     private Config properties;
+    //Revising later...
+    @Getter
     private Config config;
 
     private final Map<String, Player> players = new HashMap<>();
@@ -183,10 +196,13 @@ public class Server {
 
     private final Map<Integer, String> identifier = new HashMap<>();
 
+    @Getter
     private final Map<Integer, Level> levels = new HashMap<>();
 
+    @Getter
     private Level defaultLevel = null;
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public Server(MainLogger logger, final String filePath, String dataPath, String pluginPath) {
         instance = this;
         this.logger = logger;
@@ -311,7 +327,7 @@ public class Server {
 
         int threshold;
         try {
-            threshold = Integer.valueOf(String.valueOf(this.getConfig("network.batch-threshold", 256)));
+            threshold = Integer.parseInt(String.valueOf(this.getConfig("network.batch-threshold", 256)));
         } catch (Exception e) {
             threshold = 256;
         }
@@ -336,7 +352,7 @@ public class Server {
 
         if (this.getPropertyBoolean("enable-rcon", false)) {
             this.rcon = new RCON(this, this.getPropertyString("rcon.password", ""),
-                    (!this.getIp().equals("")) ? this.getIp() : "0.0.0.0",
+                    (!this.getIp().isEmpty()) ? this.getIp() : "0.0.0.0",
                     this.getPropertyInt("rcon.port", this.getPort()));
         }
 
@@ -360,12 +376,11 @@ public class Server {
         }
 
         Nukkit.DEBUG = (int)this.getConfig("debug.level", 1);
-        if (this.logger instanceof MainLogger) {
-            this.logger.setLogDebug(Nukkit.DEBUG > 1);
-        }
+
+        this.logger.setLogDebug(Nukkit.DEBUG > 1);
 
         this.logger.info(this.getLanguage().translateString(
-                "nukkit.server.networkStart", new String[] {this.getIp().equals("") ? "*" : this.getIp(),
+                "nukkit.server.networkStart", new String[] {this.getIp().isEmpty() ? "*" : this.getIp(),
                         String.valueOf(this.getPort())}));
         this.serverID = UUID.randomUUID();
 
@@ -417,6 +432,7 @@ public class Server {
         Generator.addGenerator(Normal.class, "default", Generator.TYPE_INFINITE);
         // todo: add old generator and hell generator
 
+        //noinspection unchecked
         for (String name : ((Map<String, Object>)this.getConfig("worlds", new HashMap<>())).keySet()) {
             if (!this.loadLevel(name)) {
                 long seed;
@@ -432,13 +448,13 @@ public class Server {
                         .split(":");
                 Class<? extends Generator> generator = Generator.getGenerator(opts[0]);
                 if (opts.length > 1) {
-                    String preset = "";
+                    StringBuilder preset = new StringBuilder();
                     for (int i = 1; i < opts.length; i++) {
-                        preset += opts[i] + ":";
+                        preset.append(opts[i]).append(":");
                     }
-                    preset = preset.substring(0, preset.length() - 1);
+                    preset = new StringBuilder(preset.substring(0, preset.length() - 1));
 
-                    options.put("preset", preset);
+                    options.put("preset", preset.toString());
                 }
 
                 this.generateLevel(name, seed, generator, options);
@@ -447,7 +463,7 @@ public class Server {
 
         if (this.getDefaultLevel() == null) {
             String defaultName = this.getPropertyString("level-name", "world");
-            if (defaultName == null || "".equals(defaultName.trim())) {
+            if (defaultName == null || defaultName.trim().isEmpty()) {
                 this.getLogger().warning("level-name cannot be null, using default");
                 defaultName = "world";
                 this.setPropertyString("level-name", defaultName);
@@ -458,7 +474,7 @@ public class Server {
                 String seedString =
                         String.valueOf(this.getProperty("level-seed", System.currentTimeMillis()));
                 try {
-                    seed = Long.valueOf(seedString);
+                    seed = Long.parseLong(seedString);
                 } catch (NumberFormatException e) {
                     seed = seedString.hashCode();
                 }
@@ -484,10 +500,6 @@ public class Server {
         this.enablePlugins(PluginLoadOrder.POSTWORLD);
 
         this.start();
-    }
-
-    public NukkitConsole getConsole() {
-        return this.console;
     }
 
     public int broadcastMessage(String message) {
@@ -726,9 +738,9 @@ public class Server {
         }
 
         try {
-            if (!this.isRunning) {
+            // if (!this.isRunning) {
                 //todo sendUsage
-            }
+            // }
 
             // clean shutdown of console thread asap
             this.consoleThread.interrupt();
@@ -812,6 +824,7 @@ public class Server {
         }
     }
 
+    @SuppressWarnings("BusyWait")
     public void tickProcessor() {
         this.nextTick = System.currentTimeMillis();
         try {
@@ -893,7 +906,7 @@ public class Server {
     }
 
     public void removePlayerListData(UUID uuid, Collection<Player> players) {
-        this.removePlayerListData(uuid, players.stream().toArray(Player[]::new));
+        this.removePlayerListData(uuid, players.toArray(Player[]::new));
     }
 
     public void sendFullPlayerListData(Player player) {
@@ -966,7 +979,7 @@ public class Server {
                         this.getLogger().debug("Raising level \"" + level.getName() + "\" tick rate to " + level.getTickRate() + " ticks");
                     } else if (tickMs >= 50) {
                         if (level.getTickRate() == this.baseTickRate) {
-                            level.setTickRate((int) Math.max(this.baseTickRate + 1, Math.min(this.autoTickRateLimit, Math.floor(tickMs / 50))));
+                            level.setTickRate((int) Math.max(this.baseTickRate + 1, Math.min(this.autoTickRateLimit, Math.floor((double) tickMs / 50))));
                             this.getLogger().debug("Level \"" + level.getName() + "\" took " + NukkitMath.round(tickMs, 2) + "ms, setting tick rate to " + level.getTickRate() + " ticks");
                         } else if ((tickMs / level.getTickRate()) >= 50 && level.getTickRate() < this.autoTickRateLimit) {
                             level.setTickRate(level.getTickRate() + 1);
@@ -979,6 +992,8 @@ public class Server {
                 if (Nukkit.DEBUG > 1 && this.logger != null) {
                     this.logger.logException(e);
                 }
+
+                assert this.logger != null;
 
                 this.logger.critical(this.getLanguage().translateString("nukkit.level.tickError", new String[]{level.getName(), e.toString()}));
             }
@@ -1003,11 +1018,11 @@ public class Server {
         }
     }
 
-    private boolean tick() {
+    private void tick() {
         long tickTime = System.currentTimeMillis();
         long tickTimeNano = System.nanoTime();
         if ((tickTime - this.nextTick) < -25) {
-            return false;
+            return;
         }
 
         Timings.fullServerTickTimer.startTiming();
@@ -1097,7 +1112,6 @@ public class Server {
             this.nextTick += 50;
         }
 
-        return true;
     }
 
     public void titleTick() {
@@ -1153,22 +1167,6 @@ public class Server {
         return Nukkit.API_VERSION;
     }
 
-    public String getFilePath() {
-        return filePath;
-    }
-
-    public String getDataPath() {
-        return dataPath;
-    }
-
-    public String getPluginPath() {
-        return pluginPath;
-    }
-
-    public int getMaxPlayers() {
-        return maxPlayers;
-    }
-
     public int getPort() {
         return this.getPropertyInt("server-port", 19132);
     }
@@ -1213,68 +1211,33 @@ public class Server {
     }
 
     public static String getGamemodeString(int mode) {
-        switch (mode) {
-            case Player.SURVIVAL:
-                return "%gameMode.survival";
-            case Player.CREATIVE:
-                return "%gameMode.creative";
-            case Player.ADVENTURE:
-                return "%gameMode.adventure";
-            case Player.SPECTATOR:
-                return "%gameMode.spectator";
-        }
-        return "UNKNOWN";
+        return switch (mode) {
+            case Player.SURVIVAL -> "%gameMode.survival";
+            case Player.CREATIVE -> "%gameMode.creative";
+            case Player.ADVENTURE -> "%gameMode.adventure";
+            case Player.SPECTATOR -> "%gameMode.spectator";
+            default -> "UNKNOWN";
+        };
     }
 
     public static int getGamemodeFromString(String str) {
-        switch (str.trim().toLowerCase()) {
-            case "0":
-            case "survival":
-            case "s":
-                return Player.SURVIVAL;
-
-            case "1":
-            case "creative":
-            case "c":
-                return Player.CREATIVE;
-
-            case "2":
-            case "adventure":
-            case "a":
-                return Player.ADVENTURE;
-
-            case "3":
-            case "spectator":
-            case "view":
-            case "v":
-                return Player.SPECTATOR;
-        }
-        return -1;
+        return switch (str.trim().toLowerCase()) {
+            case "0", "survival", "s" -> Player.SURVIVAL;
+            case "1", "creative", "c" -> Player.CREATIVE;
+            case "2", "adventure", "a" -> Player.ADVENTURE;
+            case "3", "spectator", "view", "v" -> Player.SPECTATOR;
+            default -> -1;
+        };
     }
 
     public static int getDifficultyFromString(String str) {
-        switch (str.trim().toLowerCase()) {
-            case "0":
-            case "peaceful":
-            case "p":
-                return 0;
-
-            case "1":
-            case "easy":
-            case "e":
-                return 1;
-
-            case "2":
-            case "normal":
-            case "n":
-                return 2;
-
-            case "3":
-            case "hard":
-            case "h":
-                return 3;
-        }
-        return -1;
+        return switch (str.trim().toLowerCase()) {
+            case "0", "peaceful", "p" -> 0;
+            case "1", "easy", "e" -> 1;
+            case "2", "normal", "n" -> 2;
+            case "3", "hard", "h" -> 3;
+            default -> -1;
+        };
     }
 
     public int getDifficulty() {
@@ -1308,34 +1271,6 @@ public class Server {
         return this.getPropertyString("motd", "Nukkit Server For Minecraft: PE");
     }
 
-    public MainLogger getLogger() {
-        return this.logger;
-    }
-
-    public EntityMetadataStore getEntityMetadata() {
-        return entityMetadata;
-    }
-
-    public PlayerMetadataStore getPlayerMetadata() {
-        return playerMetadata;
-    }
-
-    public LevelMetadataStore getLevelMetadata() {
-        return levelMetadata;
-    }
-
-    public PluginManager getPluginManager() {
-        return this.pluginManager;
-    }
-
-    public CraftingManager getCraftingManager() {
-        return craftingManager;
-    }
-
-    public ServerScheduler getScheduler() {
-        return scheduler;
-    }
-
     public int getTick() {
         return tickCounter;
     }
@@ -1364,10 +1299,6 @@ public class Server {
             sum += aUseAverage;
         }
         return ((float) Math.round(sum / count * 100)) / 100;
-    }
-
-    public SimpleCommandMap getCommandMap() {
-        return commandMap;
     }
 
     public Map<UUID, Player> getOnlinePlayers() {
@@ -1517,14 +1448,6 @@ public class Server {
         }
     }
 
-    public Map<Integer, Level> getLevels() {
-        return levels;
-    }
-
-    public Level getDefaultLevel() {
-        return defaultLevel;
-    }
-
     public void setDefaultLevel(Level defaultLevel) {
         if (defaultLevel == null || (this.isLevelLoaded(defaultLevel.getFolderName()) && defaultLevel != this.defaultLevel)) {
             this.defaultLevel = defaultLevel;
@@ -1565,6 +1488,7 @@ public class Server {
 
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean loadLevel(String name) {
         if (Objects.equals(name.trim(), "")) {
             throw new LevelException("Invalid empty level name");
@@ -1642,6 +1566,8 @@ public class Server {
         try {
             String path = this.getDataPath() + "worlds/" + name + "/";
 
+            assert provider != null;
+
             provider.getMethod("generate", String.class, String.class, long.class, Class.class, Map.class).invoke(null, path, name, seed, generator, options);
 
             level = new Level(this, name, path, provider);
@@ -1701,9 +1627,7 @@ public class Server {
         String path = this.getDataPath() + "worlds/" + name + "/";
         if (this.getLevelByName(name) == null) {
 
-            if (LevelProviderManager.getProvider(path) == null) {
-                return false;
-            }
+            return LevelProviderManager.getProvider(path) != null;
         }
 
         return true;
@@ -1717,15 +1641,6 @@ public class Server {
         return forceLanguage;
     }
 
-    public Network getNetwork() {
-        return network;
-    }
-
-    //Revising later...
-    public Config getConfig() {
-        return this.config;
-    }
-
     public Object getConfig(String variable) {
         return this.getConfig(variable, null);
     }
@@ -1733,10 +1648,6 @@ public class Server {
     public Object getConfig(String variable, Object defaultValue) {
         Object value = this.config.get(variable);
         return value == null ? defaultValue : value;
-    }
-
-    public Config getProperties() {
-        return this.properties;
     }
 
     public Object getProperty(String variable) {
