@@ -69,6 +69,9 @@ import cn.nukkit.timings.Timings;
 import cn.nukkit.utils.Binary;
 import cn.nukkit.utils.TextFormat;
 import cn.nukkit.utils.Zlib;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.io.IOException;
 import java.nio.ByteOrder;
 import java.util.*;
@@ -102,6 +105,7 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
     public boolean playedBefore;
     public boolean spawned = false;
     public boolean loggedIn = false;
+    @Getter
     public int gamemode;
     public long lastBreak;
 
@@ -115,6 +119,7 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
 
     protected int sendIndex = 0;
 
+    @Getter
     private String clientSecret;
 
     public Vector3 speed = null;
@@ -139,13 +144,16 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
 
     protected Vector3 teleportPosition = null;
 
+    @Getter
     protected boolean connected = true;
     protected final String ip;
     protected boolean removeFormat = true;
 
+    @Getter
     protected final int port;
     protected String username;
     protected String iusername;
+    @Getter
     protected String displayName;
 
     protected int startAction = -1;
@@ -174,11 +182,14 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
 
     protected Position spawnPosition = null;
 
+    @Getter
     protected int inAirTicks = 0;
     protected int startAirTicks = 5;
 
+    @Getter
     protected AdventureSettings adventureSettings;
 
+    @Setter
     protected boolean checkMovement = true;
 
     private final Map<Integer, Boolean> needACK = new HashMap<>();
@@ -190,8 +201,10 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
     private int exp = 0;
     private int expLevel = 0;
 
+    @Getter
     protected PlayerFood foodData = null;
 
+    @Getter
     private Entity killer = null;
 
     private final AtomicReference<Locale> locale = new AtomicReference<>(null);
@@ -200,10 +213,6 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
 
     public TranslationContainer getLeaveMessage() {
         return new TranslationContainer(TextFormat.YELLOW + "%multiplayer.player.left", this.getDisplayName());
-    }
-
-    public String getClientSecret() {
-        return clientSecret;
     }
 
     /**
@@ -262,10 +271,6 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
     @Override
     public boolean hasPlayedBefore() {
         return this.playedBefore;
-    }
-
-    public AdventureSettings getAdventureSettings() {
-        return adventureSettings;
     }
 
     public void setAdventureSettings(AdventureSettings adventureSettings) {
@@ -481,14 +486,6 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
         return true;
     }
 
-    public boolean isConnected() {
-        return connected;
-    }
-
-    public String getDisplayName() {
-        return this.displayName;
-    }
-
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
         if (this.spawned) {
@@ -508,20 +505,12 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
         return this.ip;
     }
 
-    public int getPort() {
-        return port;
-    }
-
     public Position getNextPosition() {
         return this.newPosition != null ? new Position(this.newPosition.x, this.newPosition.y, this.newPosition.z, this.level) : this.getPosition();
     }
 
     public boolean isSleeping() {
         return this.sleeping != null;
-    }
-
-    public int getInAirTicks() {
-        return this.inAirTicks;
     }
 
     @Override
@@ -956,10 +945,6 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
             pk.action = 3; //Wake up
             this.dataPacket(pk);
         }
-    }
-
-    public int getGamemode() {
-        return gamemode;
     }
 
     public boolean setGamemode(int gamemode) {
@@ -2431,6 +2416,7 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                     break;
 
                 case ProtocolInfo.MOB_ARMOR_EQUIPMENT_PACKET:
+                    //This packet is ignored. Armour changes are also sent by ContainerSetSlotPackets, and are handled there instead.
                     break;
 
                 case ProtocolInfo.INTERACT_PACKET:
@@ -2458,7 +2444,7 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                         float itemDamage = item.getAttackDamage();
 
                         for (Enchantment enchantment : item.getEnchantments()) {
-                            itemDamage += enchantment.getDamageBonus(targetEntity);
+                            itemDamage += (float) enchantment.getDamageBonus(targetEntity);
                         }
 
                         HashMap<Integer, Float> damage = new HashMap<>();
@@ -2659,7 +2645,7 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                     if (textPacket.type == TextPacket.TYPE_CHAT) {
                         textPacket.message = this.removeFormat ? TextFormat.clean(textPacket.message) : textPacket.message;
                         for (String msg : textPacket.message.split("\n")) {
-                            if (!"".equals(msg.trim()) && msg.length() <= 255 && this.messageCounter-- > 0) {
+                            if (!msg.trim().isEmpty() && msg.length() <= 255 && this.messageCounter-- > 0) {
                                 if (msg.startsWith("/")) { //Command
                                     PlayerCommandPreprocessEvent commandPreprocessEvent = new PlayerCommandPreprocessEvent(this, msg);
                                     if (commandPreprocessEvent.getMessage().length() > 320) {
@@ -2861,7 +2847,7 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                                 }
                             }
 
-                            //If can't craft by auto resize, will try to craft this item in another way
+                            //If it can't craft by auto resize, will try to craft this item in another way
                             if (!canCraft) {
                                 canCraft = true;
                                 for (int x = 0; x < 3 && canCraft; ++x) {
@@ -3697,10 +3683,6 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
         }
     }
 
-    public Entity getKiller() {
-        return killer;
-    }
-
     @Override
     public void attack(EntityDamageEvent source) {
         if (!this.isAlive()) {
@@ -4053,18 +4035,11 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
         return batch;
     }
 
+    @Setter
     private boolean foodEnabled = true;
 
     public boolean isFoodEnabled() {
         return !(this.isCreative() || this.isSpectator()) && this.foodEnabled;
-    }
-
-    public void setFoodEnabled(boolean foodEnabled) {
-        this.foodEnabled = foodEnabled;
-    }
-
-    public PlayerFood getFoodData() {
-        return this.foodData;
     }
 
     //todo a lot on dimension
@@ -4073,10 +4048,6 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
         ChangeDimensionPacket pk = new ChangeDimensionPacket();
         pk.dimension = (byte) (getLevel().getDimension() & 0xff);
         this.dataPacket(pk);
-    }
-
-    public void setCheckMovement(boolean checkMovement) {
-        this.checkMovement = checkMovement;
     }
 
     public void setSprinting(boolean value, boolean setDefault) {
