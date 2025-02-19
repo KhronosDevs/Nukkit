@@ -88,23 +88,23 @@ public class Server {
     private static Server instance = null;
     private final NukkitConsoleThread consoleThread;
 
-    private BanList banByName = null;
+    private final BanList banByName;
 
-    private BanList banByIP = null;
+    private final BanList banByIP;
 
-    private Config operators = null;
+    private final Config operators;
 
-    private Config whitelist = null;
+    private final Config whitelist;
 
     private boolean isRunning = true;
 
     private boolean hasStopped = false;
 
     @Getter
-    private PluginManager pluginManager = null;
+    private final PluginManager pluginManager;
 
     @Getter
-    private ServerScheduler scheduler = null;
+    private final ServerScheduler scheduler;
 
     private int tickCounter;
 
@@ -127,12 +127,12 @@ public class Server {
     private final NukkitConsole console;
 
     @Getter
-    private SimpleCommandMap commandMap;
+    private final SimpleCommandMap commandMap;
 
     @Getter
-    private CraftingManager craftingManager;
+    private final CraftingManager craftingManager;
 
-    private ConsoleCommandSender consoleSender;
+    private final ConsoleCommandSender consoleSender;
 
     @Getter
     private int maxPlayers;
@@ -142,34 +142,36 @@ public class Server {
     private RCON rcon;
 
     @Getter
-    private EntityMetadataStore entityMetadata;
+    private final EntityMetadataStore entityMetadata;
 
     @Getter
-    private PlayerMetadataStore playerMetadata;
+    private final PlayerMetadataStore playerMetadata;
 
     @Getter
-    private LevelMetadataStore levelMetadata;
+    private final LevelMetadataStore levelMetadata;
 
     @Getter
-    private Network network;
+    private final Network network;
 
-    private boolean networkCompressionAsync = true;
-    public int networkCompressionLevel = 7;
+    private boolean networkCompressionAsync;
+    private final boolean autoTickRate;
+    private final boolean alwaysTickPlayers;
 
-    private boolean autoTickRate = true;
-    private int autoTickRateLimit = 20;
-    private boolean alwaysTickPlayers = false;
-    private int baseTickRate = 1;
+    private final int autoTickRateLimit;
+    private final int baseTickRate;
+
+    public int networkCompressionLevel;
+
     private Boolean getAllowFlight = null;
 
     private int autoSaveTicker = 0;
     private int autoSaveTicks = 6000;
 
-    private BaseLang baseLang;
+    private final BaseLang baseLang;
 
-    private boolean forceLanguage = false;
+    private final boolean forceLanguage;
 
-    private UUID serverID;
+    private final UUID serverID;
 
     @Getter
     private final String filePath;
@@ -178,17 +180,18 @@ public class Server {
     @Getter
     private final String pluginPath;
 
-    private final Set<UUID> uniquePlayers = new HashSet<>();
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+    private final Set<UUID> uniquePlayers = new HashSet<>(); // TODO: Implement this.
 
     private QueryHandler queryHandler;
 
     private QueryRegenerateEvent queryRegenerateEvent;
 
     @Getter
-    private Config properties;
-    //Revising later...
+    private final Config properties;
+
     @Getter
-    private Config config;
+    private final Config config;
 
     private final Map<String, Player> players = new HashMap<>();
 
@@ -205,6 +208,7 @@ public class Server {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public Server(MainLogger logger, final String filePath, String dataPath, String pluginPath) {
         instance = this;
+
         this.logger = logger;
 
         this.filePath = filePath;
@@ -231,8 +235,7 @@ public class Server {
             this.getLogger().info(TextFormat.GREEN + "Welcome! Please choose a language first!");
             try {
                 String[] lines = Utils
-                        .readFile(this.getClass().getClassLoader().getResourceAsStream(
-                                "lang/language.list"))
+                        .readFile(this.getClass().getClassLoader().getResourceAsStream("lang/language.list"))
                         .split("\n");
                 for (String line : lines) {
                     this.getLogger().info(line);
@@ -364,7 +367,6 @@ public class Server {
         this.whitelist = new Config(this.dataPath + "white-list.txt", Config.ENUM);
         this.banByName = new BanList(this.dataPath + "banned-players.json");
         this.banByName.load();
-        banByIP = null;
         this.banByIP = new BanList(this.dataPath + "banned-ips.json");
         this.banByIP.load();
 
@@ -432,7 +434,6 @@ public class Server {
         Generator.addGenerator(Normal.class, "default", Generator.TYPE_INFINITE);
         // todo: add old generator and hell generator
 
-        //noinspection unchecked
         for (String name : ((Map<String, Object>)this.getConfig("worlds", new HashMap<>())).keySet()) {
             if (!this.loadLevel(name)) {
                 long seed;
@@ -484,7 +485,7 @@ public class Server {
             this.setDefaultLevel(this.getLevelByName(defaultName));
         }
 
-        this.properties.save(true);
+        this.properties.save();
 
         if (this.getDefaultLevel() == null) {
             this.getLogger().emergency(this.getLanguage().translateString("nukkit.level.defaultError"));
@@ -1115,28 +1116,26 @@ public class Server {
     }
 
     public void titleTick() {
-        if (!Nukkit.ANSI) {
-            return;
+        if (Nukkit.ANSI) {
+            Runtime runtime = Runtime.getRuntime();
+            double used = NukkitMath.round((double) (runtime.totalMemory() - runtime.freeMemory()) / 1024 / 1024, 2);
+            double max = NukkitMath.round(((double) runtime.maxMemory()) / 1024 / 1024, 2);
+            String usage = Math.round(used / max * 100) + "%";
+            String title = (char) 0x1b + "]0;" + this.getName() + " " +
+                    this.getNukkitVersion() +
+                    " | Online " + this.players.size() + "/" + this.getMaxPlayers() +
+                    " | Memory " + usage;
+            if (!Nukkit.shortTitle) {
+                title += " | U " + NukkitMath.round((this.network.getUpload() / 1024 * 1000), 2)
+                        + " D " + NukkitMath.round((this.network.getDownload() / 1024 * 1000), 2) + " kB/s";
+            }
+            title += " | TPS " + this.getTicksPerSecond() +
+                    " | Load " + this.getTickUsage() + "%" + (char) 0x07;
+
+            System.out.print(title);
+
+            this.network.resetStatistics();
         }
-
-        Runtime runtime = Runtime.getRuntime();
-        double used = NukkitMath.round((double) (runtime.totalMemory() - runtime.freeMemory()) / 1024 / 1024, 2);
-        double max = NukkitMath.round(((double) runtime.maxMemory()) / 1024 / 1024, 2);
-        String usage = Math.round(used / max * 100) + "%";
-        String title = (char) 0x1b + "]0;" + this.getName() + " " +
-                this.getNukkitVersion() +
-                " | Online " + this.players.size() + "/" + this.getMaxPlayers() +
-                " | Memory " + usage;
-        if (!Nukkit.shortTitle) {
-            title += " | U " + NukkitMath.round((this.network.getUpload() / 1024 * 1000), 2)
-                    + " D " + NukkitMath.round((this.network.getDownload() / 1024 * 1000), 2) + " kB/s";
-        }
-        title += " | TPS " + this.getTicksPerSecond() +
-                " | Load " + this.getTickUsage() + "%" + (char) 0x07;
-
-        System.out.print(title);
-
-        this.network.resetStatistics();
     }
 
     public QueryRegenerateEvent getQueryInformation() {
@@ -1731,7 +1730,7 @@ public class Server {
         if (player != null) {
             player.recalculatePermissions();
         }
-        this.operators.save(true);
+        this.operators.save();
     }
 
     public void removeOp(String name) {
@@ -1745,12 +1744,12 @@ public class Server {
 
     public void addWhitelist(String name) {
         this.whitelist.set(name.toLowerCase(), true);
-        this.whitelist.save(true);
+        this.whitelist.save();
     }
 
     public void removeWhitelist(String name) {
         this.whitelist.remove(name.toLowerCase());
-        this.whitelist.save(true);
+        this.whitelist.save();
     }
 
     public boolean isWhitelisted(String name) {
