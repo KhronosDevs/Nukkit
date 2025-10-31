@@ -46,6 +46,7 @@ public class LevelEventPacket extends DataPacket {
     public static final int EVENT_SOUND_EXPLODE = 3501;
 
     public static final int EVENT_SOUND_SPLASH = 3506;
+    public static final int EVENT_SOUND_GRAY_SPLASH = 3506;
 
     public static final int EVENT_PARTICLE_SHOOT = 2000;
     public static final int EVENT_PARTICLE_DESTROY = 2001;
