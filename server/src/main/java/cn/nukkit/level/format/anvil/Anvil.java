@@ -51,12 +51,7 @@ public class Anvil extends BaseLevelProvider {
     public static boolean isValid(String path) {
         boolean isValid = (new File(path + "/level.dat").exists()) && new File(path + "/region/").isDirectory();
         if (isValid) {
-            for (File file : new File(path + "/region/").listFiles(new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    return Pattern.matches("^.+\\.mc[r|a]$", name);
-                }
-            })) {
+            for (File file : Objects.requireNonNull(new File(path + "/region/").listFiles((dir, name) -> Pattern.matches("^.+\\.mc[r|a]$", name)))) {
                 if (!file.getName().endsWith(".mca")) {
                     isValid = false;
                     break;
@@ -81,7 +76,7 @@ public class Anvil extends BaseLevelProvider {
                 .putLong("DayTime", 0)
                 .putInt("GameType", 0)
                 .putString("generatorName", Generator.getGeneratorName(generator))
-                .putString("generatorOptions", options.containsKey("preset") ? options.get("preset") : "")
+                .putString("generatorOptions", options.getOrDefault("preset", ""))
                 .putInt("generatorVersion", 1)
                 .putBoolean("hardcore", false)
                 .putBoolean("initialized", true)

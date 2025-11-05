@@ -48,6 +48,11 @@ public abstract class BlockLiquid extends BlockTransparent {
     }
 
     @Override
+    protected AxisAlignedBB recalculateCollisionBoundingBox() {
+        return new AxisAlignedBB(this.x, this.y, this.z, this.x + 1, this.y + 1 - getFluidHeightPercent(), this.z + 1);
+    }
+
+    @Override
     public AxisAlignedBB getBoundingBox() {
         return null;
     }

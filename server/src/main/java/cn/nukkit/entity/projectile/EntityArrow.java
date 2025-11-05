@@ -94,7 +94,7 @@ public class EntityArrow extends EntityProjectile {
         }
 
         if (this.age > 1200) {
-            this.kill();
+            this.close();
             hasUpdate = true;
         }
 

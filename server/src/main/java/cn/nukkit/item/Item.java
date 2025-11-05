@@ -485,6 +485,7 @@ public class Item implements Cloneable {
     public static final int GOLDEN_CARROT = 396;
 
     public static final int SKULL = 397;
+    public static final int CARROT_ON_A_STICK = 398;
 
     public static final int PUMPKIN_PIE = 400;
 
@@ -589,6 +590,8 @@ public class Item implements Cloneable {
     public static void init() {
         if (list == null) {
             list = new Class[65535];
+            list[BLAZE_ROD] = ItemBlazeRod.class;
+            list[CARROT_ON_A_STICK] = ItemCarrotOnAStick.class;
             list[IRON_SHOVEL] = ItemShovelIron.class;
             list[IRON_PICKAXE] = ItemPickaxeIron.class;
             list[IRON_AXE] = ItemAxeIron.class;
@@ -1503,7 +1506,10 @@ public class Item implements Cloneable {
         for (CompoundTag entry : this.getNamedTag().getList("ench", CompoundTag.class).getAll()) {
             if (entry.getShort("id") == id) {
                 Enchantment e = Enchantment.getEnchantment(entry.getShort("id"));
-                e.setLevel(entry.getShort("lvl"));
+                if (e != null){
+                    e.setLevel(entry.getShort("lvl"));
+                    return e;
+                }
                 return e;
             }
         }
@@ -1563,11 +1569,13 @@ public class Item implements Cloneable {
         ListTag<CompoundTag> ench = this.getNamedTag().getList("ench", CompoundTag.class);
         for (CompoundTag entry : ench.getAll()) {
             Enchantment e = Enchantment.getEnchantment(entry.getShort("id"));
-            e.setLevel(entry.getShort("lvl"));
-            enchantments.add(e);
+            if (e != null){
+                e.setLevel(entry.getShort("lvl"));
+                enchantments.add(e);
+            }
         }
 
-        return enchantments.stream().toArray(Enchantment[]::new);
+        return enchantments.toArray(Enchantment[]::new);
     }
 
     public boolean hasCustomName() {

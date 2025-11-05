@@ -29,7 +29,7 @@ public abstract class BaseInventory implements Inventory {
 
     protected final String title;
 
-    protected final Map<Integer, Item> slots = new HashMap<>();
+    public final Map<Integer, Item> slots = new HashMap<>();
 
     protected final Set<Player> viewers = new HashSet<>();
 
@@ -296,7 +296,7 @@ public abstract class BaseInventory implements Inventory {
         if (!itemSlots.isEmpty() && !emptySlots.isEmpty()) {
             for (int slotIndex : emptySlots) {
                 if (!itemSlots.isEmpty()) {
-                    Item slot = itemSlots.get(0);
+                    Item slot = itemSlots.getFirst();
                     int amount = Math.min(slot.getMaxStackSize(), slot.getCount());
                     amount = Math.min(amount, this.getMaxStackSize());
                     slot.setCount(slot.getCount() - amount);
@@ -310,7 +310,7 @@ public abstract class BaseInventory implements Inventory {
             }
         }
 
-        return itemSlots.stream().toArray(Item[]::new);
+        return itemSlots.toArray(Item[]::new);
     }
 
     @Override
@@ -322,7 +322,7 @@ public abstract class BaseInventory implements Inventory {
             }
         }
 
-        for (int i = 0; i < this.getSize(); ++i) {
+        for (int i = 0; i < this.size; ++i) {
             Item item = this.getItem(i);
             if (item.getId() == Item.AIR || item.getCount() <= 0) {
                 continue;

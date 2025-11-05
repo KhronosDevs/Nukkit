@@ -25,6 +25,11 @@ public class BlockCarpet extends BlockFlowable {
     }
 
     @Override
+    public boolean canPassThrough() {
+        return false;
+    }
+
+    @Override
     public int getId() {
         return CARPET;
     }

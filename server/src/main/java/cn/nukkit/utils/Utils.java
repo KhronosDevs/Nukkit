@@ -24,6 +24,14 @@ import java.util.UUID;
  */
 public class Utils {
 
+    public static String rtrim(String s, char character) {
+        int i = s.length()-1;
+        while (i >= 0 && (s.charAt(i)) == character) {
+            i--;
+        }
+        return s.substring(0,i+1);
+    }
+
     public static void writeFile(String fileName, String content) throws IOException {
         writeFile(fileName, new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)));
     }

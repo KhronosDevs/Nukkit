@@ -89,7 +89,7 @@ public abstract class Entity extends Location implements Metadatable {
 
     protected long id;
 
-    protected int dataFlags = 0;
+    public List<Block> collisionBlocks = new ArrayList<>();
 
     protected final EntityMetadata dataProperties = new EntityMetadata()
             .putByte(DATA_FLAGS, 0)
@@ -109,7 +109,7 @@ public abstract class Entity extends Location implements Metadatable {
 
     protected EntityDamageEvent lastDamageCause = null;
 
-    private List<Block> blocksAround = new ArrayList<>();
+    protected List<Block> blocksAround = new ArrayList<>();
 
     public double lastX;
     public double lastY;
@@ -1416,6 +1416,20 @@ public abstract class Entity extends Location implements Metadatable {
         }
 
         return true;
+    }
+
+    public List<Block> getCollisionBlocks() {
+        if (this.collisionBlocks == null) {
+            this.collisionBlocks = new ArrayList<>();
+
+            for (Block b : getBlocksAround()) {
+                if (b.collidesWithBB(this.getBoundingBox(), true)) {
+                    this.collisionBlocks.add(b);
+                }
+            }
+        }
+
+        return this.collisionBlocks;
     }
 
     public boolean isOnGround() {

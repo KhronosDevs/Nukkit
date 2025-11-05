@@ -22,4 +22,9 @@ public class ItemFishingRod extends Item {
     public int getEnchantAbility() {
         return 1;
     }
+
+    @Override
+    public int getMaxStackSize() {
+        return 1;
+    }
 }

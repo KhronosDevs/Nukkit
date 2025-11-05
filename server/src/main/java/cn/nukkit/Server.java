@@ -69,6 +69,7 @@ import cn.nukkit.scheduler.FileWriteTask;
 import cn.nukkit.scheduler.ServerScheduler;
 import cn.nukkit.timings.Timings;
 import cn.nukkit.utils.*;
+import com.google.common.base.Preconditions;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -141,6 +142,8 @@ public class Server {
 
     private RCON rcon;
 
+    private final Thread currentThread;
+
     @Getter
     private final EntityMetadataStore entityMetadata;
 
@@ -207,6 +210,8 @@ public class Server {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public Server(MainLogger logger, final String filePath, String dataPath, String pluginPath) {
+        Preconditions.checkState(instance == null, "Already initialized!");
+        currentThread = Thread.currentThread(); // Saves the current thread instance as a reference, used in Server#isPrimaryThread()
         instance = this;
 
         this.logger = logger;
@@ -503,6 +508,16 @@ public class Server {
         this.start();
     }
 
+    /**
+     * Checks the current thread against the expected primary thread for the server.
+     *
+     * <b>Note:</b> this method should not be used to indicate the current synchronized state of the runtime. A current thread matching the main thread indicates that it is synchronized, but a mismatch does not preclude the same assumption.
+     * @return true if the current thread matches the expected primary thread, false otherwise
+     */
+    public boolean isPrimaryThread() {
+        return (Thread.currentThread() == currentThread);
+    }
+
     public int broadcastMessage(String message) {
         return this.broadcast(message, BROADCAST_CHANNEL_USERS);
     }
@@ -573,7 +588,7 @@ public class Server {
 
 
     public static void broadcastPacket(Collection<Player> players, DataPacket packet) {
-        broadcastPacket(players.stream().toArray(Player[]::new), packet);
+        broadcastPacket(players.toArray(Player[]::new), packet);
     }
 
     public static void broadcastPacket(Player[] players, DataPacket packet) {
@@ -670,6 +685,15 @@ public class Server {
     }
 
     public boolean dispatchCommand(CommandSender sender, String commandLine) throws ServerException {
+        // First we need to check if this command is on the main thread or not, if not, warn the user
+        if (!this.isPrimaryThread()) {
+            getLogger().warning("Command Dispatched Async: " + commandLine);
+            getLogger().warning("Please notify author of plugin causing this execution to fix this bug!", new Throwable());
+
+            this.scheduler.scheduleTask(() -> this.dispatchCommand(sender, commandLine));
+            return false;
+        }
+
         if (sender == null) {
             throw new ServerException("CommandSender is not valid");
         }
@@ -832,6 +856,13 @@ public class Server {
             while (this.isRunning) {
                 try {
                     this.tick();
+
+                    long next = this.nextTick;
+                    long current = System.currentTimeMillis();
+
+                    if (next - 0.1 > current) {
+                        Thread.sleep(next - current - 1, 900000);
+                    }
                 } catch (RuntimeException e) {
                     this.getLogger().logException(e);
                 }
@@ -1557,8 +1588,8 @@ public class Server {
 
         Class<? extends LevelProvider> provider;
         if ((provider = LevelProviderManager.getProviderByName
-                ((String) this.getConfig("level-settings.default-format", "mcregion"))) == null) {
-            provider = LevelProviderManager.getProviderByName("mcregion");
+                ((String) this.getConfig("level-settings.default-format", "leveldb"))) == null) {
+            provider = LevelProviderManager.getProviderByName("leveldb");
         }
 
         Level level;
@@ -1584,36 +1615,6 @@ public class Server {
         this.getPluginManager().callEvent(new LevelInitEvent(level));
 
         this.getPluginManager().callEvent(new LevelLoadEvent(level));
-
-        /*this.getLogger().notice(this.getLanguage().translateString("nukkit.level.backgroundGeneration", name));
-
-        int centerX = (int) level.getSpawnLocation().getX() >> 4;
-        int centerZ = (int) level.getSpawnLocation().getZ() >> 4;
-
-        TreeMap<String, Integer> order = new TreeMap<>();
-
-        for (int X = -3; X <= 3; ++X) {
-            for (int Z = -3; Z <= 3; ++Z) {
-                int distance = X * X + Z * Z;
-                int chunkX = X + centerX;
-                int chunkZ = Z + centerZ;
-                order.put(Level.chunkHash(chunkX, chunkZ), distance);
-            }
-        }
-
-        List<Map.Entry<String, Integer>> sortList = new ArrayList<>(order.entrySet());
-
-        Collections.sort(sortList, new Comparator<Map.Entry<String, Integer>>() {
-            @Override
-            public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
-                return o2.getValue() - o1.getValue();
-            }
-        });
-
-        for (String index : order.keySet()) {
-            Chunk.Entry entry = Level.getChunkXZ(index);
-            level.populateChunk(entry.chunkX, entry.chunkZ, true);
-        }*/
 
         return true;
     }
@@ -1797,7 +1798,7 @@ public class Server {
     }
 
     public boolean shouldSavePlayerData() {
-        return this.getPropertyBoolean("player.save-player-data", true);
+        return (Boolean) this.getConfig("player.save-player-data", true);
     }
     
     private void registerEntities() {

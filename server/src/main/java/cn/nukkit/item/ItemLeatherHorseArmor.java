@@ -12,4 +12,9 @@ public class ItemLeatherHorseArmor extends Item {
     public ItemLeatherHorseArmor(Integer meta, int count) {
         super(LEATHER_HORSE_ARMOR, meta, count, "Leather horse armor");
     }
+
+    @Override
+    public int getMaxStackSize() {
+        return 1;
+    }
 }

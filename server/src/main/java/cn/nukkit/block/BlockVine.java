@@ -4,6 +4,7 @@ import cn.nukkit.Player;
 import cn.nukkit.entity.Entity;
 import cn.nukkit.item.Item;
 import cn.nukkit.item.ItemTool;
+import cn.nukkit.level.Level;
 import cn.nukkit.math.AxisAlignedBB;
 
 /**
@@ -32,11 +33,6 @@ public class BlockVine extends BlockTransparent {
     @Override
     public double getHardness() {
         return 0.2;
-    }
-
-    @Override
-    public double getResistance() {
-        return 1;
     }
 
     @Override
@@ -75,7 +71,7 @@ public class BlockVine extends BlockTransparent {
         double f6 = 0;
         boolean flag = this.meta > 0;
         if ((this.meta & 0x02) > 0) {
-            f4 = Math.max(f4, 0.0625);
+            f4 = 0.0625;
             f1 = 0;
             f2 = 0;
             f5 = 1;
@@ -102,7 +98,7 @@ public class BlockVine extends BlockTransparent {
             flag = true;
         }
         if (!flag && this.getSide(1).isSolid()) {
-            f2 = Math.min(f2, 0.9375);
+            f2 = 0.9375;
             f5 = 1;
             f1 = 0;
             f4 = 1;
@@ -152,4 +148,30 @@ public class BlockVine extends BlockTransparent {
     public int getToolType() {
         return ItemTool.TYPE_SHEARS;
     }
+
+    @Override
+    public int onUpdate(int type) {
+        if (type == Level.BLOCK_UPDATE_NORMAL) {
+            int[] faces = {
+                    0,
+                    SIDE_SOUTH,
+                    SIDE_WEST,
+                    0,
+                    SIDE_NORTH,
+                    0,
+                    0,
+                    0,
+                    SIDE_EAST
+            };
+            if (!this.getSide(faces[this.meta]).isSolid()) {
+                Block up = this.getSide(SIDE_UP);
+                if (up.getId() != this.getId() || up.meta != this.meta) {
+                    this.getLevel().useBreakOn(this);
+                    return Level.BLOCK_UPDATE_NORMAL;
+                }
+            }
+        }
+        return 0;
+    }
+
 }

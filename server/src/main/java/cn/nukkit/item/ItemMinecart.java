@@ -33,6 +33,11 @@ public class ItemMinecart extends Item {
     }
 
     @Override
+    public int getMaxStackSize() {
+        return 1;
+    }
+
+    @Override
     public boolean onActivate(Level level, Player player, Block block, Block target, int face, double fx, double fy, double fz) {
         Block secret = level.getBlock(block.add(0, -1, 0));
         // TODO: 2016/1/30 check if blockId of secret is a rail

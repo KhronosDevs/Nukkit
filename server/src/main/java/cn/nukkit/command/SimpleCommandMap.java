@@ -10,6 +10,7 @@ import cn.nukkit.lang.TranslationContainer;
 import cn.nukkit.utils.MainLogger;
 import cn.nukkit.utils.TextFormat;
 import cn.nukkit.utils.Utils;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -168,9 +169,32 @@ public class SimpleCommandMap implements CommandMap {
             command.setLabel(label);
         }
 
+        // Then we need to check if there isn't any command conflicts with vanilla commands
+        ArrayList<String> toRemove = getStrings(command);
+
+        // Now we loop the toRemove list to remove the command conflicts from the knownCommands map
+        for (String cmd : toRemove) {
+            knownCommands.remove(cmd);
+        }
+
         this.knownCommands.put(label, command);
 
         return true;
+    }
+
+    private @NotNull ArrayList<String> getStrings(Command command) {
+        ArrayList<String> toRemove = new ArrayList<String>();
+
+        for (Map.Entry<String, Command> entry : knownCommands.entrySet()) {
+            Command cmd = entry.getValue();
+            if (cmd.getLabel().equalsIgnoreCase(command.getLabel()) && !cmd.equals(command)) { // If the new command conflicts... (But if it isn't the same command)
+                if (cmd instanceof VanillaCommand) { // And if the old command is a vanilla command...
+                    // Remove it!
+                    toRemove.add(entry.getKey());
+                }
+            }
+        }
+        return toRemove;
     }
 
     private ArrayList<String> parseArguments(String cmdLine) {

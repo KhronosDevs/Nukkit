@@ -1,45 +1,37 @@
 package cn.nukkit.scheduler;
 
 import cn.nukkit.Server;
+import lombok.Getter;
 
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-/**
- * @author Nukkit Project Team
- */
 public class AsyncPool {
 
-    private final ThreadPoolExecutor pool;
+    @Getter
     private final Server server;
-    private final int size;
-    private final AtomicInteger currentThread;
+    private final ExecutorService executor;
 
-    public AsyncPool(Server server, int size) {
-        this.currentThread = new AtomicInteger();
-        this.size = size;
-        this.pool = new ThreadPoolExecutor(size, Integer.MAX_VALUE,
-                60, TimeUnit.MILLISECONDS, new SynchronousQueue<>(),
-                runnable -> new Thread(runnable) {{
-                    setDaemon(true);
-                    setName(String.format("Nukkit Asynchronous Task Handler #%s", currentThread.incrementAndGet()));
-                }}
-        );
+    public AsyncPool(Server server) {
         this.server = server;
+        this.executor = Executors.newThreadPerTaskExecutor(
+                Thread.ofVirtual()
+                        .name("Nukkit-VirtualTask-", 0)
+                        .factory()
+        );
     }
 
-    public void submitTask(Runnable runnable) {
-        pool.execute(runnable);
+    public void execute(Runnable task) {
+        executor.submit(() -> {
+            try {
+                task.run();
+            } catch (Throwable t) {
+                server.getLogger().critical("Exception in asynchronous task", t);
+            }
+        });
     }
 
-    public Server getServer() {
-        return server;
+    public void shutdown() {
+        executor.shutdown();
     }
-
-    public int getSize() {
-        return size;
-    }
-
 }

@@ -1,0 +1,21 @@
+package cn.nukkit.item;
+
+public final class ItemCarrotOnAStick extends Item {
+
+    public ItemCarrotOnAStick() {
+        this(0, 1);
+    }
+
+    public ItemCarrotOnAStick(Integer meta) {
+        this(meta, 1);
+    }
+
+    public ItemCarrotOnAStick(Integer meta, int count) {
+        super(CARROT_ON_A_STICK, meta, count, "Carrot on a stick");
+    }
+
+    @Override
+    public int getMaxStackSize() {
+        return 1;
+    }
+}
